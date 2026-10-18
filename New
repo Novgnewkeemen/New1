@@ -1,0 +1,139 @@
+-- Roblox LocalScript: Circular Menu UI & Event Teleport System
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- 1. สร้าง ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "EventMenuGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- 2. สร้างปุ่มวงกลมหลัก (Toggle Button)
+local mainButton = Instance.new("TextButton")
+mainButton.Name = "MainCircleButton"
+mainButton.Size = UDim2.new(0, 60, 0, 60)
+mainButton.Position = UDim2.new(0.05, 0, 0.4, 0) -- ตำแหน่งซ้ายมือ
+mainButton.BackgroundColor3 = Color3.fromRGB(45, 125, 245)
+mainButton.Text = "MENU"
+mainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+mainButton.TextSize = 14
+mainButton.Font = Enum.Font.Garamond
+mainButton.Parent = screenGui
+
+-- ใส่ UICorner ให้ปุ่มเป็นวงกลมสมบูรณ์
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(1, 0)
+mainCorner.Parent = mainButton
+
+-- 3. สร้างหน้าต่างเมนูหลัก
+local menuFrame = Instance.new("Frame")
+menuFrame.Name = "MenuFrame"
+menuFrame.Size = UDim2.new(0, 260, 0, 200)
+menuFrame.Position = UDim2.new(0.05, 70, 0.4, -70)
+menuFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+menuFrame.Visible = false
+menuFrame.Parent = screenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 12)
+frameCorner.Parent = menuFrame
+
+-- หัวข้อเมนู
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 40)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "🌊 Undersea Event Menu"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 16
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.Parent = menuFrame
+
+-- ปุ่มที่ 1: บินไปตรงกลางอีเวนท์ใต้ทะเล
+local btnFlyToEvent = Instance.new("TextButton")
+btnFlyToEvent.Size = UDim2.new(0.85, 0, 0, 35)
+btnFlyToEvent.Position = UDim2.new(0.075, 0, 0.3, 0)
+btnFlyToEvent.BackgroundColor3 = Color3.fromRGB(0, 160, 200)
+btnFlyToEvent.Text = "📍 บินไปกลางอีเวนท์ใต้ทะเล"
+btnFlyToEvent.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnFlyToEvent.Font = Enum.Font.SourceSans
+btnFlyToEvent.TextSize = 14
+btnFlyToEvent.Parent = menuFrame
+
+local btn1Corner = Instance.new("UICorner")
+btn1Corner.CornerRadius = UDim.new(0, 8)
+btn1Corner.Parent = btnFlyToEvent
+
+-- ปุ่มที่ 2: วาร์ปเก็บโทเคนเปลือกหอย
+local btnCollectShells = Instance.new("TextButton")
+btnCollectShells.Size = UDim2.new(0.85, 0, 0, 35)
+btnCollectShells.Position = UDim2.new(0.075, 0, 0.55, 0)
+btnCollectShells.BackgroundColor3 = Color3.fromRGB(220, 140, 40)
+btnCollectShells.Text = "🐚 วาร์ปเก็บโทเคนเปลือกหอย"
+btnCollectShells.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnCollectShells.Font = Enum.Font.SourceSans
+btnCollectShells.TextSize = 14
+btnCollectShells.Parent = menuFrame
+
+local btn2Corner = Instance.new("UICorner")
+btn2Corner.CornerRadius = UDim.new(0, 8)
+btn2Corner.Parent = btnCollectShells
+
+---------------------------------------------------------
+-- ฟังก์ชันการทำงาน (LOGIC)
+---------------------------------------------------------
+
+-- สลับการซ่อน/แสดงเมนูเมื่อกดปุ่มวงกลม
+mainButton.MouseButton1Click:Connect(function()
+    menuFrame.Visible = not menuFrame.Visible
+end)
+
+-- ฟังก์ชันดึง Character
+local function getHRP()
+    local char = player.Character or player.CharacterAdded:Wait()
+    return char:FindFirstChild("HumanoidRootPart")
+end
+
+-- 1. ฟังก์ชันบิน/วาร์ปไปตรงกลางอีเวนท์ใต้ทะเล
+btnFlyToEvent.MouseButton1Click:Connect(function()
+    local hrp = getHRP()
+    if not hrp then return end
+
+    -- ** หมายเหตุ: ปรับพิกัด Vector3(X, Y, Z) ให้ตรงกับตำแหน่งจุดศูนย์กลางอีเวนท์ในแมพ Raise Animals 2 **
+    local eventCenterPosition = Vector3.new(0, -50, 200) 
+
+    -- ใช้ TweenService เพื่อให้ตัวละครค่อยๆ บิน/เคลื่อนที่ลอยไปอย่างราบรื่น (ลดโอกาสโดน Anti-Cheat ดึงกลับ)
+    local tweenInfo = TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(eventCenterPosition)})
+    tween:Play()
+end)
+
+-- 2. ฟังก์ชันวาร์ปไปเก็บโทเคนเปลือกหอย
+btnCollectShells.MouseButton1Click:Connect(function()
+    local hrp = getHRP()
+    if not hrp then return end
+
+    -- ค้นหาวัตถุที่มีชื่อเกี่ยวกับเปลือกหอยใน Workspace
+    -- (โปรดเปลี่ยนชื่อ "ShellToken" เป็นชื่อ Model/Part เปลือกหอยจริงในแมพ)
+    local targetName = "ShellToken" 
+    local foundShells = {}
+
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        if obj.Name == targetName and (obj:IsA("BasePart") or obj:IsA("Model")) then
+            table.insert(foundShells, obj)
+        end
+    end
+
+    if #foundShells > 0 then
+        -- วาร์ปไปยังเปลือกหอยชิ้นแรกที่พบ
+        local targetPart = foundShells[1]:IsA("Model") and foundShells[1].PrimaryPart or foundShells[1]
+        if targetPart then
+            hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+        end
+    else
+        warn("ไม่พบโทเคนเปลือกหอยในบริเวณนี้")
+    end
+end)
